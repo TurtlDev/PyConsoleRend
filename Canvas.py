@@ -39,7 +39,7 @@ class canvas:
         for y in enumerate(self.grid.values()):#a
             print(y)
             for x in enumerate(y[1]):
-                self.grid[y[0]][x[0]]
+                self.grid[y[0]][x[0]][0] = 1 if x[1][0] == 0 else 0
     def render(self):
         col = [0,15]
         screen = '\033[0'
