@@ -37,7 +37,6 @@ class canvas:
 
     def __invert__(self):
         for y in enumerate(self.grid):
-            print(y)
             for x in enumerate(y[1]):
                 self.grid[y[0]][x[0]][0] = 1 if x[1][0] == 0 else 0
                 self.grid[y[0]][x[0]][1] = 1 if x[1][1] == 0 else 0
@@ -48,4 +47,6 @@ class canvas:
             for x in y:
                 screen += f"\033[48;5;{col[x[0]]}m \033[48;5;{col[x[1]]}m "
             screen += '\033[0m\n'
-        print(screen,end='\n\033[0')
+        print(screen,end='\033[0',flush=True)
+        for _ in range(self.width * self.height):
+            print('\b\b',end='')
