@@ -23,12 +23,12 @@ class canvas:
             nno""")
         #yes, you can color half pixel
         #sadly, you cant color a quarter of a pixel
-        self.grid:dict = {
-            y:[
+        self.grid = [
+            [
                 [0,0] for x in range(self.width)
             ]  for y in range(self.height)
-        }
-    def __getitem__(self,y:int | float):
+        ]
+    def __getitem__(self,y:int):
         print(y)
         return self.grid[y]
 
@@ -36,14 +36,15 @@ class canvas:
         print("dont.")
 
     def __invert__(self):
-        for y in enumerate(self.grid.values()):#a
+        for y in enumerate(self.grid):
             print(y)
             for x in enumerate(y[1]):
                 self.grid[y[0]][x[0]][0] = 1 if x[1][0] == 0 else 0
+                self.grid[y[0]][x[0]][1] = 1 if x[1][1] == 0 else 0
     def render(self):
         col = [0,15]
         screen = '\033[0'
-        for y in tuple(self.grid.values()):
+        for y in tuple(self.grid):
             for x in y:
                 screen += f"\033[48;5;{col[x[0]]}m \033[48;5;{col[x[1]]}m "
             screen += '\033[0m\n'
