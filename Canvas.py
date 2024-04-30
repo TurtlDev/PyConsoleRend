@@ -10,7 +10,7 @@ class canvas:
                 )
         canvas.exsist = True
         return super().__new__(cls)
-    def __init__(self,dims: tuple[int | None,int | None],*, 
+    def __init__(self,dims: tuple[int,int],*, 
                 color_mode: Literal['bw','rgb','ansi256'] = "ansi256"):
         self.width = dims[0]
         self.height = dims[1]
@@ -26,7 +26,7 @@ class canvas:
         if color_mode == 'rgb':
             self.grid = [
                 [
-                    [(None,None,None),(None,None,None)] for x in range(self.width)
+                    [(0,0,0),(0,0,0)] for x in range(self.width)
                 ]  for y in range(self.height)]
         else:
             self.grid = [
@@ -53,27 +53,27 @@ class canvas:
             [
                 [(0,0,0),(0,0,0)] for x in range(self.width)
             ]  for y in range(self.height)]
-    def setcord(self,x,y,color: tuple[int | None, int | None, int | None] | int, 
+            
+    def setcord(self,x,y,color: tuple[int, int, int] | int, 
                 side: Literal["Left","left","L","l",
                 "Right","right","R","r", "Both", "both", "B", "b"] = "b"):
-        if self.color_mode == "rgb":
-            if not isinstance(color,tuple):
+            if self.color_mode == "rgb" and not isinstance(color,tuple):
                 raise ValueError("rgb must take rgb value in form of tuple")
             if side in self.BOTH:
-                self.grid[y][x][0] = self.grid[y][x][1] = (color[0],color[1],color[2])
+                self.grid[y][x][0] = self.grid[y][x][1] = ((color[0],color[1],color[2]) 
+                                                           if self.color_mode == "rgb" else color)
                 return
-            self.grid[y][x][self.RIGHTLEFT[side]] = (color[0],color[1],color[2])
+            self.grid[y][x][self.RIGHTLEFT[side]] = ((color[0],color[1],color[2])
+                                                    if self.color_mode == "rgb" else color)
             return
-        self.grid[y][x][0] = self.grid[y][x][1] = color
 
 
-    def checkerboard(self,color: tuple[int | None, int | None, int | None] | int,
+    def checkerboard(self,color: tuple[int, int, int] | int,
                      *,size: Literal["big","little"] = "big"):
-
         if self.color_mode == "rgb":
             if not isinstance(color,tuple):
                 raise ValueError("rgb must take rgb value in form of tuple")
-            if size == "big":
+        if size == "big":
                 for i in range(round(self.height/2)):
                     for ii in range(round(self.width/2)):
                         try:
@@ -81,16 +81,17 @@ class canvas:
                             self.setcord(ii*2+1,i*2+1,color)
                         except IndexError:
                             pass
-            else:
-                for i in range(self.height):
-                    for ii in range(self.width):
-                        try:
-                            if i % 2 != 0:
-                                self.setcord(ii,i,color,"l")
-                            else:
-                                self.setcord(ii,i,color,"r")                          
-                        except IndexError:
-                            pass
+        else:
+            for i in range(self.height):
+                for ii in range(self.width):
+                    try:
+                        if i % 2 == 0:
+                            self.setcord(ii,i,color,"l")
+                        else:
+                            self.setcord(ii,i,color,"r")
+                        
+                    except IndexError:
+                        pass
 
     def render(self):
         screen = '\033[0'
@@ -98,10 +99,12 @@ class canvas:
             case "rgb":
                 for y in self.grid:
                     for x in y:
-                        x0:tuple[int | None, int | None, int | None] = x[0]
-                        x1:tuple[int | None, int | None, int | None] = x[1]
-                        if any(i not None for i in x1):
-                            
+                        x0:tuple[int, int, int] = x[0]
+                        x1:tuple[int, int, int] = x[1]
+                        if -1 in x0:
+                            screen+='\033[0m '
+                        if -1 in x1:
+                            screen+='\033[0m '
                         screen += (
                         f"\033[48;2;{x0[0]};{x0[1]};{x0[2]}m "
                         +f"\033[48;2;{x1[0]};{x1[1]};{x1[2]}m ")
@@ -109,10 +112,15 @@ class canvas:
             case "ansi256":
                 for y in self.grid:
                     for x in y:
-                        screen += f"\033[48;5;{x[0]}m \033[48;5;{x[1]}m "
+                        if x[0] == -1:
+                            screen+='\033[0m '
+                        else:
+                            screen+=f"\033[48;5;{x[0]}m "
+                        if x[1] == -1:
+                            screen+='\033[0m '
+                            continue
+                        screen+=f"\033[48;5;{x[1]}m "
                     screen += '\033[0m\n'
-
-
             case "bw":
                 col = {0:0,1:15}
                 for y in self.grid:
