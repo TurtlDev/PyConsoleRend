@@ -1,9 +1,11 @@
 import numpy as np
-#(predata(id, (x,y), (connections)))
+#(((x,y), (connections)),((x,y), (connections)))
 class obj():
-  def __init__(self, array, pos = np.array([0,0])) -> None:
-    self.array = array
-  def Loadobj(self, file):
-    pass
-  def Saveobj(self, dir):
-    pass
+    def __init__(self, array, pos = np.array([0,0])) -> None:
+        self.array = array
+        self.pos = pos
+    def Loadobj(self, dir):
+        data = np.load(dir)
+        return obj(data)
+    def Saveobj(self, dir) -> None:
+        np.save(dir, self.array)
