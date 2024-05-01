@@ -1,5 +1,7 @@
-from typing import Literal
+import itertools
 
+from typing import Literal
+#add ascii support (text in image)
 
 class canvas:
     exsist = False
@@ -16,23 +18,14 @@ class canvas:
         self.height = dims[1]
         self.dims = dims
         self.color_mode = color_mode
-        self.END ='\033[F'*self.width*self.height+'\033[0'
+        self.END ='\033[F'*(self.width*self.height)+'\033[0'
         self.COLORMODES = {'bw', 'rgb', 'ansi256'}
         self.BOTH = {"Both", "both", "B", "b"}
         self.RIGHTLEFT = {"Right":1,"right":1,"R":1,"r":1,
                           "Left":0,"left":0,"L":0,"l":0}
         #yes, you can color half pixel
         #sadly, you cant color a quarter of a pixel
-        if color_mode == 'rgb':
-            self.grid = [
-                [
-                    [(0,0,0),(0,0,0)] for x in range(self.width)
-                ]  for y in range(self.height)]
-        else:
-            self.grid = [
-                [
-                    [0,0] for x in range(self.width)
-                ]  for y in range(self.height)]
+        self.grid = [[[(0,0,0),(0,0,0)] for x in range(self.width)] if color_mode == 'rgb' else [[0,0] for x in range(self.width)] for y in range(self.height)]
 
 
     def __getitem__(self,y:int):
@@ -89,7 +82,6 @@ class canvas:
                             self.setcord(ii,i,color,"l")
                         else:
                             self.setcord(ii,i,color,"r")
-                        
                     except IndexError:
                         pass
 
@@ -118,8 +110,8 @@ class canvas:
                             screen+=f"\033[48;5;{x[0]}m "
                         if x[1] == -1:
                             screen+='\033[0m '
-                            continue
-                        screen+=f"\033[48;5;{x[1]}m "
+                        else:
+                            screen+=f"\033[48;5;{x[1]}m "
                     screen += '\033[0m\n'
             case "bw":
                 col = {0:0,1:15}
@@ -127,6 +119,4 @@ class canvas:
                     for x in y:
                         screen += f"\033[48;5;{col[x[0]]}m \033[48;5;{col[x[1]]}m "
                     screen += '\033[0m\n'
-
-
         print(screen,end=self.END)
