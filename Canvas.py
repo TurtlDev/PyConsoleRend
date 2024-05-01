@@ -18,14 +18,22 @@ class canvas:
         self.height = dims[1]
         self.dims = dims
         self.color_mode = color_mode
+        #constants
         self.END ='\033[F'*(self.width*self.height)+'\033[0'
         self.COLORMODES = {'bw', 'rgb', 'ansi256'}
         self.BOTH = {"Both", "both", "B", "b"}
         self.RIGHTLEFT = {"Right":1,"right":1,"R":1,"r":1,
-                          "Left":0,"left":0,"L":0,"l":0}
+                          "Left":0,"left":0,"L":0,"l":0}#cant believe bro hard coded this shit
         #yes, you can color half pixel
         #sadly, you cant color a quarter of a pixel
-        self.grid = [[[(0,0,0),(0,0,0)] for x in range(self.width)] if color_mode == 'rgb' else [[0,0] for x in range(self.width)] for y in range(self.height)]
+
+        
+        self.grid = [
+            [
+                [(0,0,0),(0,0,0)] for x in range(self.width)] if color_mode == 'rgb' 
+            else [
+                [0,0] for x in range(self.width)] for y in range(self.height)
+            ]
 
 
     def __getitem__(self,y:int):
@@ -45,7 +53,8 @@ class canvas:
             self.grid = [
             [
                 [(0,0,0),(0,0,0)] for x in range(self.width)
-            ]  for y in range(self.height)]
+            ]  for y in range(self.height)] if self.color_mode == "rgb" else [[[0,0] for x in range(self.width)] for y in range(self.height)]
+
             
     def setcord(self,x,y,color: tuple[int, int, int] | int, 
                 side: Literal["Left","left","L","l",
@@ -61,27 +70,25 @@ class canvas:
             return
 
 
-    def checkerboard(self,color: tuple[int, int, int] | int,
+    def checkerboard(self,colorA: tuple[int, int, int] | int, colorB: tuple[int, int, int] | int,
                      *,size: Literal["big","little"] = "big"):
         if self.color_mode == "rgb":
             if not isinstance(color,tuple):
                 raise ValueError("rgb must take rgb value in form of tuple")
         if size == "big":
-                for i in range(round(self.height/2)):
-                    for ii in range(round(self.width/2)):
-                        try:
-                            self.setcord(ii*2,i*2,color)
-                            self.setcord(ii*2+1,i*2+1,color)
-                        except IndexError:
-                            pass
+                for i in range(round(self.height)):
+                    for ii in range(round(self.width)):
+                        pass
         else:
-            for i in range(self.height):
-                for ii in range(self.width):
+            for y in range(self.height):
+                for x in range(self.width):
                     try:
-                        if i % 2 == 0:
-                            self.setcord(ii,i,color,"l")
+                        if y % 2 == 0:
+                            self.setcord(x,y,colorA,"l")
+                            self.setcord(x,y,colorB,"r")
                         else:
-                            self.setcord(ii,i,color,"r")
+                            self.setcord(x,y,colorA,"r")
+                            self.setcord(x,y,colorB,"l")
                     except IndexError:
                         pass
 
@@ -91,15 +98,13 @@ class canvas:
             case "rgb":
                 for y in self.grid:
                     for x in y:
-                        x0:tuple[int, int, int] = x[0]
-                        x1:tuple[int, int, int] = x[1]
-                        if -1 in x0:
+                        if -1 in x[0]:
                             screen+='\033[0m '
-                        if -1 in x1:
+                        if -1 in x[1]:
                             screen+='\033[0m '
                         screen += (
-                        f"\033[48;2;{x0[0]};{x0[1]};{x0[2]}m "
-                        +f"\033[48;2;{x1[0]};{x1[1]};{x1[2]}m ")
+                        f"\033[48;2;{x[0][0]};{x[0][1]};{x[0][2]}m "
+                        +f"\033[48;2;{x[1][0]};{x[1][1]};{x[1][2]}m ")
                     screen += '\033[0m\n'
             case "ansi256":
                 for y in self.grid:
@@ -110,8 +115,8 @@ class canvas:
                             screen+=f"\033[48;5;{x[0]}m "
                         if x[1] == -1:
                             screen+='\033[0m '
-                        else:
-                            screen+=f"\033[48;5;{x[1]}m "
+                            continue
+                        screen+=f"\033[48;5;{x[1]}m "
                     screen += '\033[0m\n'
             case "bw":
                 col = {0:0,1:15}
@@ -120,3 +125,8 @@ class canvas:
                         screen += f"\033[48;5;{col[x[0]]}m \033[48;5;{col[x[1]]}m "
                     screen += '\033[0m\n'
         print(screen,end=self.END)
+    @staticmethod
+    def kill(*msg):
+        print("\033[0m",*msg)
+        quit()
+        
